@@ -98,9 +98,13 @@ namespace hideoutcat
         Transform GetPlayerCam()
         {
             if (playerCam == null)
-                playerCam = Camera.main;
+            {
+                var cam = Camera.main;
+                if (cam != null)
+                    playerCam = cam;
+            }
 
-            return playerCam.transform;
+            return playerCam != null ? playerCam.transform : null;
         }
         public void SetTargetNode(Node node)
         {
@@ -497,7 +501,9 @@ namespace hideoutcat
 
         float DistanceToPlayer()
         {
-            return Vector3.Distance(transform.position, GetPlayerCam().position);
+            var camTransform = GetPlayerCam();
+            if (camTransform == null) return 999f;
+            return Vector3.Distance(transform.position, camTransform.position);
         }
 
         void HandlePlayerInteraction()
@@ -548,11 +554,18 @@ namespace hideoutcat
 
         bool IsPlayerInTheWay()
         {
+            if (Singleton<GameWorld>.Instance == null || Singleton<GameWorld>.Instance.MainPlayer == null)
+                return false;
+
             if (Singleton<GameWorld>.Instance.MainPlayer.PointOfView != EPointOfView.FirstPerson)
                 return false;
 
-            float distToPlayer = Vector3.Distance(GetPlayerCam().position, transform.position);
-            Vector3 directionToTarget = (GetPlayerCam().position - transform.position).normalized;
+            var camTransform = GetPlayerCam();
+            if (camTransform == null)
+                return false;
+
+            float distToPlayer = Vector3.Distance(camTransform.position, transform.position);
+            Vector3 directionToTarget = (camTransform.position - transform.position).normalized;
             directionToTarget.y = 0f;
             float angleToPlayer = Vector3.SignedAngle(transform.forward, directionToTarget, Vector3.up);
 
